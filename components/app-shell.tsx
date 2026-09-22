@@ -10,6 +10,7 @@ import { BillsScreen } from "@/components/screens/bills-screen"
 import { GoalScreen } from "@/components/screens/goal-screen"
 import { ProfileScreen } from "@/components/screens/profile-screen"
 import { ProtectScreen } from "@/components/screens/protect-screen"
+import { Chatbot } from "@/components/chatbot"
 
 export type Tab = "home" | "budget" | "bills" | "protect" | "goal" | "profile"
 
@@ -117,6 +118,8 @@ export function AppShell() {
           })}
         </ul>
       </nav>
+
+      <Chatbot />
     </div>
   )
 }
