@@ -1,14 +1,25 @@
 "use client"
 
-import { Lock, LogOut, ShieldCheck, User as UserIcon } from "lucide-react"
+import { useState } from "react"
+import {
+  BadgeCheck,
+  CreditCard,
+  Fingerprint,
+  Loader2,
+  Lock,
+  LogOut,
+  ShieldCheck,
+  User as UserIcon,
+} from "lucide-react"
 import { useStore } from "@/lib/store"
-import { Card } from "@/components/ui/primitives"
+import { Card, Badge } from "@/components/ui/primitives"
 import { creditScore } from "@/lib/compute"
 import { inr } from "@/lib/format"
+import type { KycDoc } from "@/lib/types"
 
 export function ProfileScreen() {
-  const { state, updateProfile, resetApp } = useStore()
-  const { profile } = state
+  const { state, updateProfile, verifyDocument, resetApp } = useStore()
+  const { profile, kyc } = state
   const score = creditScore(state)
 
   const fieldClass =
@@ -109,6 +120,45 @@ export function ProfileScreen() {
       </Card>
 
       <Card>
+        <div className="mb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="size-5 text-primary" />
+            <p className="font-semibold text-foreground">Document verification (KYC)</p>
+          </div>
+          {kyc.aadhaar.status === "verified" && kyc.pan.status === "verified" && (
+            <Badge tone="success">
+              <BadgeCheck className="size-3" />
+              Verified
+            </Badge>
+          )}
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Verify your Aadhaar and PAN to unlock higher payment limits and instant credit.
+        </p>
+        <div className="space-y-3">
+          <DocRow
+            icon={<Fingerprint className="size-5" />}
+            label="Aadhaar Card"
+            placeholder="1234 5678 9012"
+            inputMode="numeric"
+            maxLength={14}
+            format={formatAadhaar}
+            doc={kyc.aadhaar}
+            onVerify={(v) => verifyDocument("aadhaar", v)}
+          />
+          <DocRow
+            icon={<CreditCard className="size-5" />}
+            label="PAN Card"
+            placeholder="ABCDE1234F"
+            maxLength={10}
+            format={(v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "")}
+            doc={kyc.pan}
+            onVerify={(v) => verifyDocument("pan", v)}
+          />
+        </div>
+      </Card>
+
+      <Card>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Lock className="size-5 text-primary" />
@@ -154,6 +204,92 @@ export function ProfileScreen() {
       <p className="pb-2 text-center text-xs text-muted-foreground">
         ZENPAY · Pay smart. Save smarter.
       </p>
+    </div>
+  )
+}
+
+function formatAadhaar(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 12)
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim()
+}
+
+function DocRow({
+  icon,
+  label,
+  placeholder,
+  doc,
+  onVerify,
+  format,
+  maxLength,
+  inputMode,
+}: {
+  icon: React.ReactNode
+  label: string
+  placeholder: string
+  doc: KycDoc
+  onVerify: (value: string) => void
+  format: (value: string) => string
+  maxLength: number
+  inputMode?: "numeric" | "text"
+}) {
+  const [value, setValue] = useState(doc.number)
+  const verified = doc.status === "verified"
+  const pending = doc.status === "pending"
+  const canSubmit = value.replace(/\s/g, "").length >= (inputMode === "numeric" ? 12 : 10)
+
+  return (
+    <div className="rounded-2xl border border-border p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`flex size-9 items-center justify-center rounded-xl ${
+              verified ? "bg-success/10 text-success" : "bg-accent text-primary"
+            }`}
+          >
+            {icon}
+          </span>
+          <p className="text-sm font-medium text-foreground">{label}</p>
+        </div>
+        {verified ? (
+          <Badge tone="success">
+            <BadgeCheck className="size-3" />
+            Verified
+          </Badge>
+        ) : pending ? (
+          <Badge tone="warning">
+            <Loader2 className="size-3 animate-spin" />
+            Verifying
+          </Badge>
+        ) : (
+          <Badge tone="neutral">Not verified</Badge>
+        )}
+      </div>
+
+      {verified ? (
+        <p className="mt-2.5 pl-11 font-mono text-sm tracking-wider text-muted-foreground">
+          {doc.number}
+        </p>
+      ) : (
+        <div className="mt-2.5 flex gap-2">
+          <input
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm tracking-wider outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-60"
+            placeholder={placeholder}
+            value={value}
+            inputMode={inputMode}
+            maxLength={maxLength}
+            disabled={pending}
+            onChange={(e) => setValue(format(e.target.value))}
+          />
+          <button
+            type="button"
+            disabled={!canSubmit || pending}
+            onClick={() => onVerify(value)}
+            className="shrink-0 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-40"
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : "Verify"}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

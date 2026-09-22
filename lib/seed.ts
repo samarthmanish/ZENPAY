@@ -141,5 +141,30 @@ export function createInitialState(): AppState {
       },
     ],
     reviewedRefunds: [],
+    rewardPoints: 1240,
+    offers: [
+      {
+        id: "o-1",
+        title: "5% back on groceries",
+        detail: "Blinkit, Zepto & BigBasket",
+        cashback: "Up to ₹75",
+      },
+      {
+        id: "o-2",
+        title: "₹50 back on mobile recharge",
+        detail: "Recharge ₹199 or more",
+        cashback: "Flat ₹50",
+      },
+      {
+        id: "o-3",
+        title: "10% back on first bill pay",
+        detail: "Electricity & broadband",
+        cashback: "Up to ₹100",
+      },
+    ],
+    kyc: {
+      aadhaar: { status: "unverified", number: "" },
+      pan: { status: "unverified", number: "" },
+    },
   }
 }

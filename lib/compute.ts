@@ -61,6 +61,42 @@ export function dailyLimitStatus(state: AppState): DailyLimitStatus {
   }
 }
 
+/* ---------- Rewards & Cashback ---------- */
+
+export interface RewardSummary {
+  points: number
+  /** Cashback earned this month (1% of spend, capped) */
+  cashbackThisMonth: number
+  tier: "Silver" | "Gold" | "Platinum"
+  /** Points needed to reach the next tier, 0 if maxed */
+  toNextTier: number
+  nextTier: "Gold" | "Platinum" | null
+}
+
+const TIER_THRESHOLDS = { Gold: 1000, Platinum: 2500 }
+
+export function rewardSummary(state: AppState): RewardSummary {
+  const points = state.rewardPoints
+  const spend = spentThisMonth(state.transactions)
+  const cashbackThisMonth = Math.min(Math.round(spend * 0.01), 500)
+
+  let tier: RewardSummary["tier"] = "Silver"
+  let nextTier: RewardSummary["nextTier"] = "Gold"
+  let toNextTier = TIER_THRESHOLDS.Gold - points
+
+  if (points >= TIER_THRESHOLDS.Platinum) {
+    tier = "Platinum"
+    nextTier = null
+    toNextTier = 0
+  } else if (points >= TIER_THRESHOLDS.Gold) {
+    tier = "Gold"
+    nextTier = "Platinum"
+    toNextTier = TIER_THRESHOLDS.Platinum - points
+  }
+
+  return { points, cashbackThisMonth, tier, toNextTier, nextTier }
+}
+
 /* ---------- Credit Score for the Invisible ---------- */
 
 export interface CreditFactor {

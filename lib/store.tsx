@@ -32,6 +32,7 @@ interface StoreValue {
   resetLimitsToSuggestion: () => void
   markRefundReviewed: (id: string) => void
   claimSubsidy: (id: string) => void
+  verifyDocument: (kind: "aadhaar" | "pan", number: string) => void
   resetApp: () => void
 }
 
@@ -162,6 +163,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             sub.id === id ? { ...sub, status: "claimed" } : sub,
           ),
         })),
+      verifyDocument: (kind, number) => {
+        setState((s) => ({
+          ...s,
+          kyc: { ...s.kyc, [kind]: { status: "pending", number } },
+        }))
+        // Simulate a verification check completing
+        setTimeout(() => {
+          setState((s) => ({
+            ...s,
+            kyc: { ...s.kyc, [kind]: { status: "verified", number } },
+          }))
+        }, 1600)
+      },
       resetApp: () => {
         setState(createInitialState())
       },

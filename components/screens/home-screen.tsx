@@ -11,6 +11,9 @@ import {
   Bell,
   CheckCircle2,
   CircleDashed,
+  Gift,
+  Sparkles,
+  Coins,
 } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { Card, Progress, Badge, Donut } from "@/components/ui/primitives"
@@ -19,6 +22,7 @@ import { CATEGORIES, CATEGORY_COLORS } from "@/lib/seed"
 import {
   dailyLimitStatus,
   daysUntilSalary,
+  rewardSummary,
   spendByCategory,
   spentThisMonth,
 } from "@/lib/compute"
@@ -36,6 +40,11 @@ export function HomeScreen({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const byCat = spendByCategory(transactions)
   const days = daysUntilSalary(profile.salaryDay)
   const goalPct = profile.target > 0 ? (goalSaved / profile.target) * 100 : 0
+  const rewards = rewardSummary(state)
+  const tierPct =
+    rewards.nextTier && rewards.toNextTier > 0
+      ? (rewards.points / (rewards.points + rewards.toNextTier)) * 100
+      : 100
 
   const segments = CATEGORIES.map((c) => ({
     value: byCat[c],
@@ -153,6 +162,78 @@ export function HomeScreen({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
           <p className="mt-2 text-sm text-muted-foreground">
             {inr(goalSaved)} / {inr(profile.target)} saved
           </p>
+        </Card>
+
+        {/* Rewards & cashback */}
+        <Card className="overflow-hidden border-primary/20">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-brand-gradient text-primary-foreground">
+                <Gift className="size-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground">Rewards &amp; Cashback</p>
+                <p className="text-xs text-muted-foreground">{rewards.tier} member</p>
+              </div>
+            </div>
+            <Badge tone="warning">
+              <Sparkles className="size-3" />
+              {rewards.tier}
+            </Badge>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-accent p-3">
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Coins className="size-3.5 text-primary" /> Reward points
+              </p>
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {rewards.points.toLocaleString("en-IN")}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                ≈ {inr(Math.round(rewards.points / 4))} value
+              </p>
+            </div>
+            <div className="rounded-2xl bg-success/10 p-3">
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="size-3.5 text-success" /> Cashback this month
+              </p>
+              <p className="mt-1 text-xl font-bold text-success">
+                {inr(rewards.cashbackThisMonth)}
+              </p>
+              <p className="text-[11px] text-muted-foreground">1% back on spends</p>
+            </div>
+          </div>
+
+          {rewards.nextTier && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Progress to {rewards.nextTier}</span>
+                <span>{rewards.toNextTier.toLocaleString("en-IN")} pts to go</span>
+              </div>
+              <Progress className="mt-1.5" value={tierPct} indicatorClassName="bg-brand-gradient" />
+            </div>
+          )}
+
+          <div className="mt-4 space-y-2">
+            {state.offers.map((o) => (
+              <div
+                key={o.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-accent text-primary">
+                    <Gift className="size-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{o.title}</p>
+                    <p className="text-xs text-muted-foreground">{o.detail}</p>
+                  </div>
+                </div>
+                <Badge tone="success">{o.cashback}</Badge>
+              </div>
+            ))}
+          </div>
         </Card>
 
         {/* Quick actions */}

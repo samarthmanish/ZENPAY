@@ -62,6 +62,21 @@ export interface Subsidy {
   status: "eligible" | "claimed" | "missed"
 }
 
+export interface RewardOffer {
+  id: string
+  title: string
+  detail: string
+  cashback: string
+}
+
+export type KycStatus = "unverified" | "pending" | "verified"
+
+export interface KycDoc {
+  status: KycStatus
+  /** Masked/entered document number */
+  number: string
+}
+
 export interface Profile {
   name: string
   age: number
@@ -84,4 +99,13 @@ export interface AppState {
   subsidies: Subsidy[]
   /** ids of refund transactions the user has reviewed */
   reviewedRefunds: string[]
+  /** Loyalty points earned through payments */
+  rewardPoints: number
+  /** Cashback offers available to the user */
+  offers: RewardOffer[]
+  /** KYC document verification state */
+  kyc: {
+    aadhaar: KycDoc
+    pan: KycDoc
+  }
 }
